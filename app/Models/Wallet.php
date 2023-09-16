@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use App\Jobs\UpdateWallet;
 
 class Wallet extends Model
 {
@@ -40,6 +41,19 @@ class Wallet extends Model
             'timestamp' => Carbon::now()->timestamp,
         ]);
 
-        return $response->object();
+        $r = $response->object();
+
+        if ($r->status == 1) {
+            $uw = new UpdateWallet($this->id, $amount, 'deposit', $r->status);
+            dispatch($uw);
+        }
+
+        return $r;
+    }
+
+    public function makeWithdrawal($amount)
+    {
+        $uw = new UpdateWallet($this->id, $amount, 'withdrawal', 1);
+        dispatch($uw);
     }
 }
