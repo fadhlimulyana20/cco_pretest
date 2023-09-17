@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use App\Jobs\UpdateWallet;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Wallet extends Model
 {
@@ -30,12 +31,12 @@ class Wallet extends Model
 
     public function makeDeposit($amount)
     {
+        $base64_name = base64_encode($this->user->name);
         $order_id = Str::random(5);
         Http::fake(['https://yourdomain.com/deposit' => Http::response(['order_id' => $order_id, 'amount' => $amount, 'status' => 1])], ['Headers']);
 
-
         // Make HTTP Request
-        $response = Http::post('https://yourdomain.com/deposit', [
+        $response = Http::withToken($base64_name)->post('https://yourdomain.com/deposit', [
             'order_id' => $order_id,
             'amount' => $amount,
             'timestamp' => Carbon::now()->timestamp,
